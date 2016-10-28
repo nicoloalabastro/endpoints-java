@@ -26,7 +26,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
 /**
- * Initialization parameters supported by the {@link SystemServiceServlet}.
+ * Initialization parameters supported by {@link SystemServiceServlet} and {@link EndpointsServlet}.
  */
 public class ServletInitializationParameters {
   private static final String INIT_PARAM_NAME_SERVICES = "services";
@@ -37,6 +37,7 @@ public class ServletInitializationParameters {
       "illegalArgumentIsBackendError";
   private static final String INIT_PARAM_NAME_ENABLE_EXCEPTION_COMPATIBILITY =
       "enableExceptionCompatibility";
+  private static final String INIT_PARAM_NAME_DATASTORE_CONFIG = "enableDatastoreConfig";
 
   private static final Splitter CSV_SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
   private static final Joiner CSV_JOINER = Joiner.on(',').skipNulls();
@@ -51,6 +52,7 @@ public class ServletInitializationParameters {
   private final boolean isClientIdWhitelistEnabled;
   private final boolean isIllegalArgumentBackendError;
   private final boolean isExceptionCompatibilityEnabled;
+  private final boolean isDatastoreConfigEnabled;
 
   /**
    * Returns a new {@link Builder} for this class.
@@ -93,6 +95,12 @@ public class ServletInitializationParameters {
       if (isExceptionCompatibilityEnabled != null) {
         builder.setExceptionCompatibilityEnabled(
             parseBoolean(isExceptionCompatibilityEnabled, "is exception compatibility enabled"));
+      }
+      String isDatastoreConfigEnabled =
+          config.getInitParameter(INIT_PARAM_NAME_DATASTORE_CONFIG);
+      if (isDatastoreConfigEnabled != null) {
+        builder.setDatastoreConfigEnabled(
+            parseBoolean(isDatastoreConfigEnabled, "is datastore config enabled"));
       }
     }
     return builder.build();
@@ -156,6 +164,14 @@ public class ServletInitializationParameters {
   }
 
   /**
+   * Returns {@code true} if additional configuration should be loaded from datastore.
+   * See {@link com.google.api.server.spi.config.datastore.ApiConfigDatastoreReader} for details.
+   */
+  public boolean isDatastoreConfigEnabled() {
+    return isDatastoreConfigEnabled;
+  }
+
+  /**
    * Returns the parameters as a {@link java.util.Map} of parameter name to {@link String} value.
    */
   public ImmutableMap<String, String> asMap() {
@@ -169,18 +185,21 @@ public class ServletInitializationParameters {
         Boolean.toString(isIllegalArgumentBackendError));
     parameterNameToValue.put(INIT_PARAM_NAME_ENABLE_EXCEPTION_COMPATIBILITY,
         Boolean.toString(isExceptionCompatibilityEnabled));
+    parameterNameToValue.put(INIT_PARAM_NAME_DATASTORE_CONFIG,
+        Boolean.toString(isDatastoreConfigEnabled));
     return parameterNameToValue.build();
   }
 
   private ServletInitializationParameters(
       ImmutableSet<Class<?>> serviceClasses, boolean isServletRestricted,
       boolean isClientIdWhitelistEnabled, boolean isIllegalArgumentBackendError,
-      boolean isExceptionCompatibilityEnabled) {
+      boolean isExceptionCompatibilityEnabled, boolean isDatastoreConfigEnabled) {
     this.serviceClasses = serviceClasses;
     this.isServletRestricted = isServletRestricted;
     this.isClientIdWhitelistEnabled = isClientIdWhitelistEnabled;
     this.isIllegalArgumentBackendError = isIllegalArgumentBackendError;
     this.isExceptionCompatibilityEnabled = isExceptionCompatibilityEnabled;
+    this.isDatastoreConfigEnabled = isDatastoreConfigEnabled;
   }
 
   /**
@@ -192,6 +211,7 @@ public class ServletInitializationParameters {
     private boolean isClientIdWhitelistEnabled = true;
     private boolean isIllegalArgumentBackendError = false;
     private boolean isExceptionCompatibilityEnabled = true;
+    private boolean isDatastoreConfigEnabled = false;
 
     /**
      * Adds an endpoint service class to serve.
@@ -241,6 +261,11 @@ public class ServletInitializationParameters {
       return this;
     }
 
+    public Builder setDatastoreConfigEnabled(boolean isDatastoreConfigEnabled) {
+      this.isDatastoreConfigEnabled = isDatastoreConfigEnabled;
+      return this;
+    }
+
     /**
      * Builds a new {@link ServletInitializationParameters} instance with the values from this
      * builder.
@@ -248,7 +273,7 @@ public class ServletInitializationParameters {
     public ServletInitializationParameters build() {
       return new ServletInitializationParameters(
           serviceClasses.build(), isServletRestricted, isClientIdWhitelistEnabled,
-          isIllegalArgumentBackendError, isExceptionCompatibilityEnabled);
+          isIllegalArgumentBackendError, isExceptionCompatibilityEnabled, isDatastoreConfigEnabled);
     }
   }
 }
