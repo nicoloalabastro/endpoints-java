@@ -153,6 +153,12 @@ public class DiscoveryGenerator {
       if (config.getDescription() != null) {
         doc.setDescription(config.getDescription());
       }
+      if (config.getIconX16() != null) {
+        doc.getIcons().setX16(config.getIconX16());
+      }
+      if (config.getIconX32() != null) {
+        doc.getIcons().setX32(config.getIconX32());
+      }
       if (config.getTitle() != null) {
         doc.setTitle(config.getTitle());
       }
@@ -422,8 +428,8 @@ public class DiscoveryGenerator {
           .setDiscoveryLink("." + relativePath)
           .setDiscoveryRestUrl(context.getApiRoot() + "/discovery/v1" + relativePath)
           .setIcons(new Icons()
-                .setX16("https://www.gstatic.com/images/branding/product/1x/googleg_16dp.png")
-                .setX32("https://www.gstatic.com/images/branding/product/1x/googleg_32dp.png"))
+              .setX16(doc.getIcons().getX16())
+              .setX32(doc.getIcons().getX32()))
           .setId(doc.getName() + ":" + doc.getVersion())
           .setKind("discovery#directoryItem")
           .setName(doc.getName())
