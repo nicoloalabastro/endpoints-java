@@ -207,7 +207,10 @@ public class ServletResponseResultWriter implements ResultWriter {
   protected String writeValueAsString(Object value)
       throws IOException {
     try {
-      return objectWriter.writeValueAsString(value);
+      String fullResponse = objectWriter.writeValueAsString(value);
+      //TODO filter fullResponse based on fields parameter
+      //implement https://developers.google.com/drive/v3/web/performance#partial-response
+      return fullResponse;
     } catch (JsonProcessingException e) {
       throw new IOException(e);
     }
