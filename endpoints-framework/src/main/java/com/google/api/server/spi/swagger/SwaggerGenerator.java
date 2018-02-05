@@ -40,6 +40,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -305,6 +306,7 @@ public class SwaggerGenerator {
           } else if (parameterConfig.isEnum()) {
             parameter.setType("string");
             parameter.setEnum(getEnumValues(parameterConfig.getType()));
+            //TODO set description for enum values, based on formatEnumValueDescriptions
             parameter.setRequired(required);
           } else {
             parameter.setType(
@@ -412,11 +414,31 @@ public class SwaggerGenerator {
       }
       docSchema.setProperties(fields);
     }
-    if (!schema.enumValues().isEmpty()) {
+    ImmutableList<String> enumValues = schema.enumValues();
+    if (!enumValues.isEmpty()) {
       docSchema.setType("string");
-      docSchema._enum(schema.enumValues());
+      docSchema._enum(enumValues);
+      String enumValueDescriptions = formatEnumValueDescriptions(enumValues, schema.enumDescriptions());
+      if (enumValueDescriptions != null) {
+        docSchema.description(enumValueDescriptions);
+      }
     }
     return docSchema;
+  }
+
+  private String formatEnumValueDescriptions(List<String> enumValues, List<String> enumDescriptions) {
+    Preconditions.checkArgument(enumValues.size() == enumDescriptions.size(),
+            "enumValues and enumDescriptions list are expected to have the same size");
+    List<String> enumValueDescriptions = new ArrayList<>();
+    for (int i = 0; i < enumValues.size(); i++) {
+      String enumDesc = enumDescriptions.get(i);
+      if (!enumDesc.isEmpty()) {
+        String enumValue = enumValues.get(i);
+        String enumValueDescription = "*`" + enumValue + "` - " + enumDesc;
+        enumValueDescriptions.add(enumValueDescription);
+      }
+    }
+    return enumValueDescriptions.isEmpty() ? null : Joiner.on('\n').join(enumValueDescriptions);
   }
 
   private Property convertToSwaggerProperty(Field f) {

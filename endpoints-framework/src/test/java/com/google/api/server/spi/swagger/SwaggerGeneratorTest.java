@@ -30,13 +30,7 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.annotationreader.ApiConfigAnnotationReader;
 import com.google.api.server.spi.config.model.ApiConfig;
 import com.google.api.server.spi.swagger.SwaggerGenerator.SwaggerContext;
-import com.google.api.server.spi.testing.AbsoluteCommonPathEndpoint;
-import com.google.api.server.spi.testing.AbsolutePathEndpoint;
-import com.google.api.server.spi.testing.ArrayEndpoint;
-import com.google.api.server.spi.testing.EnumEndpoint;
-import com.google.api.server.spi.testing.FooDescriptionEndpoint;
-import com.google.api.server.spi.testing.FooEndpoint;
-import com.google.api.server.spi.testing.LimitMetricsEndpoint;
+import com.google.api.server.spi.testing.*;
 import com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -97,6 +91,13 @@ public class SwaggerGeneratorTest {
   public void testWriteSwagger_EnumEndpoint() throws Exception {
     Swagger swagger = getSwagger(EnumEndpoint.class, new SwaggerContext(), true);
     Swagger expected = readExpectedAsSwagger("enum_endpoint.swagger");
+    compareSwagger(expected, swagger);
+  }
+
+  @Test
+  public void testWriteSwagger_EnumEndpoint_WithDescription() throws Exception {
+    Swagger swagger = getSwagger(EnumDescriptionEndpoint.class, new SwaggerContext(), true);
+    Swagger expected = readExpectedAsSwagger("enum_description_endpoint.swagger");
     compareSwagger(expected, swagger);
   }
 

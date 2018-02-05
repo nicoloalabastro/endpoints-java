@@ -247,6 +247,7 @@
     },
     "TestEnumDescription": {
       "type": "string",
+      "description": "*`VALUE1` - description of value1\n*`VALUE2` - description of value2",
       "enum": [
         "VALUE1",
         "VALUE2"
