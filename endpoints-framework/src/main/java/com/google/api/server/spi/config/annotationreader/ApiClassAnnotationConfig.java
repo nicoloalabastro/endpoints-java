@@ -23,6 +23,7 @@ import com.google.api.server.spi.config.model.ApiIssuerAudienceConfig;
 import com.google.api.server.spi.config.scope.AuthScopeExpressions;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Annotaion-specific setting helpers for {@link ApiClassConfig}.

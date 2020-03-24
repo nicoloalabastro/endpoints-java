@@ -25,12 +25,11 @@ import com.google.api.server.spi.config.scope.AuthScopeExpression;
 import com.google.api.server.spi.config.scope.AuthScopeExpressions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import io.swagger.models.auth.SecuritySchemeDefinition;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Flattened configuration for a swarm endpoint.  Data generally originates from
@@ -83,6 +82,8 @@ public class ApiConfig {
 
   private final ApiClassConfig apiClassConfig;
   private List<ApiLimitMetricConfig> apiLimitMetrics;
+
+  private Map<String, SecuritySchemeDefinition> securityDefinitions;
 
   /**
    * Simple factory to create {@link ApiConfig} instances.
@@ -277,6 +278,15 @@ public class ApiConfig {
     authenticators = null;
     apiKeyRequired = false;
     apiLimitMetrics = ImmutableList.of();
+    securityDefinitions = ImmutableMap.of();
+  }
+
+  public Map<String, SecuritySchemeDefinition> getSecurityDefinitions() {
+    return securityDefinitions;
+  }
+
+  public void setSecurityDefinitions(Map<String, SecuritySchemeDefinition> securityDefinitions) {
+    this.securityDefinitions = securityDefinitions;
   }
 
   public ApiKey getApiKey() {

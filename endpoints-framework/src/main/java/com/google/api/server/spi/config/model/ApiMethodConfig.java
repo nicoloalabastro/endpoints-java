@@ -44,6 +44,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.swagger.models.SecurityRequirement;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -182,6 +184,16 @@ public class ApiMethodConfig {
   private List<ApiMetricCostConfig> metricCosts;
 
   private final TypeLoader typeLoader;
+
+  private List<SecurityRequirement> securityRequirements;
+
+  public List<SecurityRequirement> getSecurityRequirements() {
+    return securityRequirements;
+  }
+
+  public void setSecurityRequirements(List<SecurityRequirement> securityRequirements) {
+    this.securityRequirements = securityRequirements;
+  }
 
   public ApiMethodConfig(EndpointMethod method, TypeLoader typeLoader,
       ApiClassConfig apiClassConfig) {

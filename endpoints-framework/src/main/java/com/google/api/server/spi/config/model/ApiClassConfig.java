@@ -21,6 +21,8 @@ import com.google.api.server.spi.config.AuthLevel;
 import com.google.api.server.spi.config.Authenticator;
 import com.google.api.server.spi.config.scope.AuthScopeExpression;
 import com.google.common.base.Preconditions;
+import io.swagger.models.SecurityRequirement;
+import io.swagger.models.auth.SecuritySchemeDefinition;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -53,6 +55,9 @@ public class ApiClassConfig {
   private Boolean apiKeyRequired;
 
   private final MethodConfigMap methods;
+
+  private List<SecurityRequirement> securityRequirements;
+  private List<SecuritySchemeDefinition> securityDefinitions;
 
   public ApiClassConfig(ApiConfig apiConfig, TypeLoader typeLoader, Class<?> apiClass) {
     this.apiConfig = apiConfig;
@@ -118,6 +123,22 @@ public class ApiClassConfig {
     return Objects.hash(apiClassJavaName, apiClassJavaSimpleName, typeLoader, resource,
         authLevel, scopeExpression, audiences, clientIds, authenticators,
         useDatastore, methods, issuerAudiences, apiKeyRequired);
+  }
+
+  public List<SecuritySchemeDefinition> getSecurityDefinitions() {
+    return securityDefinitions;
+  }
+
+  public void setSecurityDefinitions(List<SecuritySchemeDefinition> securityDefinitions) {
+    this.securityDefinitions = securityDefinitions;
+  }
+
+  public List<SecurityRequirement> getSecurityRequirements() {
+    return securityRequirements;
+  }
+
+  public void setSecurityRequirements(List<SecurityRequirement> securityRequirements) {
+    this.securityRequirements = securityRequirements;
   }
 
   public ApiConfig getApiConfig() {

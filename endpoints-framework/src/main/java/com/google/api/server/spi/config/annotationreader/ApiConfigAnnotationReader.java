@@ -152,6 +152,7 @@ public class ApiConfigAnnotationReader implements ApiConfigSource {
 
     if (api != null) {
       readApi(new ApiAnnotationConfig(config), api);
+      //TODO extract securitydefinition read from readApi and put it in a separate method like readApiAuth
       readApiAuth(new ApiAuthAnnotationConfig(config.getAuthConfig()),
           getAnnotationProperty(api, "auth"));
       readApiFrontendLimits(new ApiFrontendLimitsAnnotationConfig(config.getFrontendLimitsConfig()),
@@ -202,6 +203,7 @@ public class ApiConfigAnnotationReader implements ApiConfigSource {
         this.getAnnotationProperty(api, "apiKeyRequired"));
     config.setApiLimitMetrics(
         this.getAnnotationProperty(api, "limitDefinitions"));
+    config.setSecurityDefinitions(getAnnotationProperty(api, "securityDefinitions"));
   }
 
   private ApiIssuerConfigs getIssuerConfigs(Annotation annotation)
@@ -351,6 +353,7 @@ public class ApiConfigAnnotationReader implements ApiConfigSource {
         this.getAnnotationProperty(apiMethod, "apiKeyRequired"));
     config.setMetricCosts(
         getAnnotationProperty(apiMethod, "metricCosts"));
+    config.setSecurityRequirements(getAnnotationProperty(apiMethod, "securityRequirements"));
   }
 
   private void readMethodRequestParameters(EndpointMethod endpointMethod,

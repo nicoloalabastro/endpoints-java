@@ -22,23 +22,11 @@ import com.google.api.server.spi.Strings;
 import com.google.api.server.spi.TypeLoader;
 import com.google.api.server.spi.config.ApiConfigException;
 import com.google.api.server.spi.config.annotationreader.ApiAnnotationIntrospector;
-import com.google.api.server.spi.config.model.ApiConfig;
-import com.google.api.server.spi.config.model.ApiIssuerAudienceConfig;
-import com.google.api.server.spi.config.model.ApiIssuerConfigs;
+import com.google.api.server.spi.config.model.*;
 import com.google.api.server.spi.config.model.ApiIssuerConfigs.IssuerConfig;
-import com.google.api.server.spi.config.model.ApiKey;
-import com.google.api.server.spi.config.model.ApiLimitMetricConfig;
-import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.api.server.spi.config.model.ApiMethodConfig.ErrorResponse;
-import com.google.api.server.spi.config.model.ApiMetricCostConfig;
-import com.google.api.server.spi.config.model.ApiParameterConfig;
-import com.google.api.server.spi.config.model.AuthScopeRepository;
-import com.google.api.server.spi.config.model.FieldType;
-import com.google.api.server.spi.config.model.Schema;
 import com.google.api.server.spi.config.model.Schema.Field;
 import com.google.api.server.spi.config.model.Schema.SchemaReference;
-import com.google.api.server.spi.config.model.SchemaRepository;
-import com.google.api.server.spi.config.model.Types;
 import com.google.api.server.spi.config.validation.ApiConfigValidator;
 import com.google.api.server.spi.types.DateAndTime;
 import com.google.api.server.spi.types.SimpleDate;
@@ -60,18 +48,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import com.google.common.net.UrlEscapers;
 import com.google.common.reflect.TypeToken;
-import io.swagger.models.ExternalDocs;
-import io.swagger.models.Info;
-import io.swagger.models.Model;
-import io.swagger.models.ModelImpl;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.RefModel;
-import io.swagger.models.RefResponse;
-import io.swagger.models.Response;
-import io.swagger.models.Scheme;
-import io.swagger.models.Swagger;
-import io.swagger.models.Tag;
+import io.swagger.models.*;
 import io.swagger.models.auth.ApiKeyAuthDefinition;
 import io.swagger.models.auth.In;
 import io.swagger.models.auth.OAuth2Definition;
@@ -137,7 +114,7 @@ public class SwaggerGenerator {
   private static final String METRIC_KIND = "GAUGE";
   private static final String METRICS_KEY = "metrics";
   private static final String QUOTA_KEY = "quota";
-  
+
   private static final ImmutableMap<Type, String> TYPE_TO_STRING_MAP =
       ImmutableMap.<java.lang.reflect.Type, String>builder()
           .put(String.class, "string")
@@ -193,7 +170,7 @@ public class SwaggerGenerator {
   private static final ImmutableSet<String> INLINED_MODEL_NAMES = ImmutableSet.of(
       GoogleJsonError.class.getSimpleName(), GoogleJsonError.ErrorInfo.class.getSimpleName()
   );
-  
+
   private static final Function<ApiConfig, ApiKey> CONFIG_TO_ROOTLESS_KEY =
       config -> new ApiKey(config.getName(), config.getVersion(), null /* root */);
 
@@ -228,6 +205,15 @@ public class SwaggerGenerator {
             .version(context.docVersion)
             //TODO contact, license, termsOfService could be configured
         );
+
+    Map<String, SecuritySchemeDefinition> securityDefinitions = new HashMap<>();
+
+    for (ApiConfig config : configs) {
+        securityDefinitions.putAll(config.getSecurityDefinitions());
+    }
+
+    swagger.setSecurityDefinitions(securityDefinitions);
+
     if (!Strings.isEmptyOrWhitespace(context.apiName)) {
       swagger.vendorExtension("x-google-api-name", context.apiName);
     }
@@ -280,11 +266,11 @@ public class SwaggerGenerator {
     if (!context.extractCommonParametersAsRefs && !context.combineCommonParametersInSamePath) {
       return;
     }
-    
+
     Map<String, Multiset<Parameter>> paramNameCounter = new LinkedHashMap<>();
     Multimap<Parameter, Path> specLevelParameters = HashMultimap.create();
     Map<Path, Multimap<Parameter, Operation>> pathLevelParameters = Maps.newHashMap();
-    
+
     //collect parameters on all operations
     swagger.getPaths().values().forEach(path -> {
       Multimap<Parameter, Operation> parameters = HashMultimap.create();
@@ -301,7 +287,7 @@ public class SwaggerGenerator {
         pathLevelParameters.put(path, parameters);
       });
     });
-    
+
     if (context.extractCommonParametersAsRefs) {
       //combine common spec-level params (only if more than one path)
       specLevelParameters.asMap().forEach((parameter, paths) -> {
@@ -321,13 +307,13 @@ public class SwaggerGenerator {
         }
       });
     }
-    
+
       //combine remaining common path-level params
     pathLevelParameters.forEach((path, parameterMap) -> {
       parameterMap.asMap().forEach((parameter, operations) -> {
         //if parameter is used in all operations on this path, move it to path level
         boolean combined = false;
-        if (context.combineCommonParametersInSamePath 
+        if (context.combineCommonParametersInSamePath
             && operations.size() == path.getOperations().size()) {
           path.addParameter(parameter);
           operations.forEach(operation -> operation.getParameters().remove(parameter));
@@ -468,6 +454,17 @@ public class SwaggerGenerator {
       .tags(Collections.singletonList(getTagName(apiConfig, context)))
       .description(methodConfig.getDescription())
       .deprecated(methodConfig.isDeprecated() ? true : null);
+
+
+    List<SecurityRequirement> securityRequirements = methodConfig.getSecurityRequirements();
+    List<Map<String, List<String>>> securityRequirementsMap = new ArrayList<>();
+
+    for (SecurityRequirement securityRequirement : securityRequirements) {
+      securityRequirementsMap.add(securityRequirement.getRequirements());
+    }
+
+    operation.setSecurity(securityRequirementsMap);
+
     Collection<String> pathParameters = methodConfig.getPathParameters();
     for (ApiParameterConfig parameterConfig : methodConfig.getParameterConfigs()) {
       boolean isPathParameter = pathParameters.contains(parameterConfig.getName());
@@ -485,7 +482,7 @@ public class SwaggerGenerator {
           if (parameterConfig.isRepeated()) {
             TypeToken<?> t = parameterConfig.getRepeatedItemSerializedType();
             parameter.type("array")
-                //RestServletRequestParamReader uses "," as a separator for repeated path params 
+                //RestServletRequestParamReader uses "," as a separator for repeated path params
                 // => csv, but reads multiple occurrences of query parameters => multi
                 .collectionFormat(isPathParameter ? "csv" : "multi");
             Property p = getSwaggerArrayProperty(t);
@@ -542,7 +539,7 @@ public class SwaggerGenerator {
         //add error code specific to the exceptions thrown by the method
         List<ErrorResponse> errorCodes = methodConfig.getErrorReponses();
         for (ErrorResponse error : errorCodes) {
-          operation.response(error.code, 
+          operation.response(error.code,
               getOrCreateErrorModelRef(swagger, apiConfig, genCtx, error.name, error.description));
         }
       }
@@ -552,7 +549,7 @@ public class SwaggerGenerator {
             getOrCreateErrorModelRef(swagger, apiConfig, genCtx, null,null));
       }
     }
-    
+
     writeAuthConfig(swagger, methodConfig, operation);
     if (methodConfig.isApiKeyRequired()) {
       List<Map<String, List<String>>> security = operation.getSecurity();
@@ -575,7 +572,7 @@ public class SwaggerGenerator {
     addDefinedMetricCosts(genCtx.limitMetrics, operation, methodConfig.getMetricCosts());
   }
 
-  private RefResponse getOrCreateErrorModelRef(Swagger swagger, ApiConfig apiConfig, 
+  private RefResponse getOrCreateErrorModelRef(Swagger swagger, ApiConfig apiConfig,
       GenerationContext genCtx, String name, String description) {
     Model schema = getSchema(genCtx.schemata
         .getOrAdd(TypeToken.of(GoogleJsonErrorContainer.class), apiConfig));
@@ -606,9 +603,7 @@ public class SwaggerGenerator {
     boolean issuerAudiencesIsEmpty = !issuerAudiences.isSpecified() || issuerAudiences.isEmpty();
     List<String> legacyAudiences = methodConfig.getAudiences();
     boolean legacyAudiencesIsEmpty = legacyAudiences == null || legacyAudiences.isEmpty();
-    if (issuerAudiencesIsEmpty && legacyAudiencesIsEmpty) {
-      return;
-    }
+
     ImmutableList<String> scopes = ImmutableList
         .copyOf(methodConfig.getScopeExpression().getAllScopes());
     if (!issuerAudiencesIsEmpty) {
@@ -617,7 +612,7 @@ public class SwaggerGenerator {
         IssuerConfig issuerConfig = methodConfig.getApiConfig().getIssuers().getIssuer(issuer);
         List<String> requiredScopes = issuerConfig.isUseScopesInAuthFlow() ? scopes :
             Collections.emptyList();
-        String fullIssuer = addNonConflictingSecurityDefinition(swagger, issuerConfig, audiences, 
+        String fullIssuer = addNonConflictingSecurityDefinition(swagger, issuerConfig, audiences,
             requiredScopes);
         operation.addSecurity(fullIssuer, requiredScopes);
       }
@@ -662,7 +657,7 @@ public class SwaggerGenerator {
       }
       docSchema.setProperties(fields);
     }
-    //map schema should be inlined, but handling anyway 
+    //map schema should be inlined, but handling anyway
     Field mapValueSchema = schema.mapValueSchema();
     if (mapValueSchema != null) {
       docSchema.setAdditionalProperties(convertToSwaggerProperty(mapValueSchema));
@@ -850,7 +845,7 @@ public class SwaggerGenerator {
   public static class SwaggerContext {
     public static final String DEFAULT_TAG_TEMPLATE = "${apiName}:${apiVersion}${.Resource}";
     public static final String DEFAULT_OPERATION_ID_TEMPLATE = "${apiName}:${apiVersion}${.Resource}${.method}";
-    
+
     private Scheme scheme = Scheme.HTTPS;
     private String hostname = "myapi.appspot.com";
     private String basePath = "/_ah/api";
@@ -869,7 +864,7 @@ public class SwaggerGenerator {
       this.scheme = "http".equals(scheme) ? Scheme.HTTP : Scheme.HTTPS;
       return this;
     }
-    
+
     public SwaggerContext setHostname(String hostname) {
       this.hostname = hostname;
       return this;
@@ -939,13 +934,13 @@ public class SwaggerGenerator {
 
   /**
    * A template mechanism based on Apache Commons lang's StrSubstitutor (placeholder syntax is "${var}).
-   * 
+   *
    * The following variables are available on API and API method contexts:
    * - apiName
    * - apiVersion
    * - resource (might be null for API or method context)
    * - method (is null when working in a method context)
-   * 
+   *
    * Each variable comes with following variants:
    * - Uppercased variants (if "${apiName}" is "myApi", "${ApiName}" will be "MyAPi"
    * - Prefixed with "-",":" or "." (only chars that are safe for use in Swagger tags for Endpoints Portal)
@@ -989,5 +984,5 @@ public class SwaggerGenerator {
     }
 
   }
-  
+
 }

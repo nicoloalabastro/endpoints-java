@@ -15,6 +15,8 @@
  */
 package com.google.api.server.spi.config;
 
+import io.swagger.annotations.Authorization;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -41,6 +43,8 @@ public @interface ApiMethod {
     /** An HTTP DELETE call. Used for deleting resources. */
     public static final String DELETE = "DELETE";
   }
+
+  Authorization[] securityRequirements() default {};
 
   /**
    * The name for this method in the .api file. This will automatically be

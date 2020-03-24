@@ -24,8 +24,13 @@ import com.google.api.server.spi.config.model.ApiMethodConfig;
 import com.google.api.server.spi.config.model.ApiMetricCostConfig;
 import com.google.api.server.spi.config.scope.AuthScopeExpressions;
 import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.Authorization;
+import io.swagger.annotations.AuthorizationScope;
+import io.swagger.models.SecurityRequirement;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Flattened method configuration for a swarm endpoint method. Data generally originates from
@@ -42,6 +47,27 @@ class ApiMethodAnnotationConfig {
 
   public ApiMethodConfig getConfig() {
     return config;
+  }
+
+  public void setSecurityRequirements(Authorization[] securityRequirements) {
+    if (securityRequirements == null) return;
+
+    List<SecurityRequirement> requirements = new ArrayList<>(securityRequirements.length);
+
+    for (Authorization securityRequirement : securityRequirements) {
+      SecurityRequirement requirement = new SecurityRequirement();
+      List<String> scopes = new ArrayList<>();
+
+      for (AuthorizationScope scope : securityRequirement.scopes()) {
+        scopes.add(scope.scope());
+      }
+
+      requirement.setRequirements(securityRequirement.value(), scopes);
+
+      requirements.add(requirement);
+    }
+
+    config.setSecurityRequirements(requirements);
   }
 
   public void setNameIfNotEmpty(String name) {
