@@ -49,8 +49,12 @@ class ApiMethodAnnotationConfig {
     return config;
   }
 
+  public void setUseApiLevelAuth(boolean useApiLevelAuth) {
+      config.setUseApiLevelAuth(useApiLevelAuth);
+  }
+
   public void setSecurityRequirements(Authorization[] securityRequirements) {
-    if (securityRequirements == null) return;
+    if (securityRequirements == null || config.isUseApiLevelAuth()) return;
 
     List<SecurityRequirement> requirements = new ArrayList<>(securityRequirements.length);
 

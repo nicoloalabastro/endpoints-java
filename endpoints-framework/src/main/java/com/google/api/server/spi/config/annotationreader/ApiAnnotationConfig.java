@@ -23,10 +23,8 @@ import com.google.api.server.spi.config.model.*;
 import com.google.api.server.spi.config.scope.AuthScopeExpressions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import io.swagger.annotations.ApiKeyAuthDefinition;
-import io.swagger.annotations.OAuth2Definition;
-import io.swagger.annotations.Scope;
-import io.swagger.annotations.SecurityDefinition;
+import io.swagger.annotations.*;
+import io.swagger.models.SecurityRequirement;
 import io.swagger.models.auth.In;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 
@@ -47,6 +45,27 @@ class ApiAnnotationConfig {
 
     public ApiConfig getConfig() {
         return config;
+    }
+
+    public void setSecurityRequirements(Authorization[] securityRequirements) {
+        if (securityRequirements == null) return;
+
+        List<SecurityRequirement> requirements = new ArrayList<>(securityRequirements.length);
+
+        for (Authorization securityRequirement : securityRequirements) {
+            SecurityRequirement requirement = new SecurityRequirement();
+            List<String> scopes = new ArrayList<>();
+
+            for (AuthorizationScope scope : securityRequirement.scopes()) {
+                scopes.add(scope.scope());
+            }
+
+            requirement.setRequirements(securityRequirement.value(), scopes);
+
+            requirements.add(requirement);
+        }
+
+        config.setSecurityRequirements(requirements);
     }
 
     public void setSecurityDefinitions(SecurityDefinition[] securityDefinitions) {

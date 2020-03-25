@@ -15,6 +15,7 @@
  */
 package com.google.api.server.spi.config;
 
+import io.swagger.annotations.Authorization;
 import io.swagger.annotations.SecurityDefinition;
 
 import java.lang.annotation.ElementType;
@@ -133,6 +134,8 @@ public @interface Api {
   Class<? extends Authenticator>[] authenticators() default {Authenticator.class};
 
   SecurityDefinition[] securityDefinitions() default {};
+
+  Authorization[] securityRequirements() default {};
 
   /**
    * {@code true} if this API configuration is used as the base for another. Should be {@code false}

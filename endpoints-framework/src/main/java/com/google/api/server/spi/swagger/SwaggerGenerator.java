@@ -207,12 +207,17 @@ public class SwaggerGenerator {
         );
 
     Map<String, SecuritySchemeDefinition> securityDefinitions = new HashMap<>();
+    List<SecurityRequirement> securityRequirements = new ArrayList<>();
 
     for (ApiConfig config : configs) {
         securityDefinitions.putAll(config.getSecurityDefinitions());
+        securityRequirements.addAll(config.getSecurityRequirements());
     }
 
+    securityRequirements = securityRequirements.stream().distinct().collect(Collectors.toList());
+
     swagger.setSecurityDefinitions(securityDefinitions);
+    swagger.setSecurity(securityRequirements);
 
     if (!Strings.isEmptyOrWhitespace(context.apiName)) {
       swagger.vendorExtension("x-google-api-name", context.apiName);
@@ -457,13 +462,16 @@ public class SwaggerGenerator {
 
 
     List<SecurityRequirement> securityRequirements = methodConfig.getSecurityRequirements();
-    List<Map<String, List<String>>> securityRequirementsMap = new ArrayList<>();
 
-    for (SecurityRequirement securityRequirement : securityRequirements) {
-      securityRequirementsMap.add(securityRequirement.getRequirements());
+    if (securityRequirements != null) {
+      List<Map<String, List<String>>> securityRequirementsMap = new ArrayList<>();
+
+      for (SecurityRequirement securityRequirement : securityRequirements) {
+        securityRequirementsMap.add(securityRequirement.getRequirements());
+      }
+
+      operation.setSecurity(securityRequirementsMap);
     }
-
-    operation.setSecurity(securityRequirementsMap);
 
     Collection<String> pathParameters = methodConfig.getPathParameters();
     for (ApiParameterConfig parameterConfig : methodConfig.getParameterConfigs()) {

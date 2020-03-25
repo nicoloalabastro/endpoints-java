@@ -204,6 +204,7 @@ public class ApiConfigAnnotationReader implements ApiConfigSource {
     config.setApiLimitMetrics(
         this.getAnnotationProperty(api, "limitDefinitions"));
     config.setSecurityDefinitions(getAnnotationProperty(api, "securityDefinitions"));
+    config.setSecurityRequirements(getAnnotationProperty(api, "securityRequirements"));
   }
 
   private ApiIssuerConfigs getIssuerConfigs(Annotation annotation)
@@ -353,6 +354,7 @@ public class ApiConfigAnnotationReader implements ApiConfigSource {
         this.getAnnotationProperty(apiMethod, "apiKeyRequired"));
     config.setMetricCosts(
         getAnnotationProperty(apiMethod, "metricCosts"));
+    config.setUseApiLevelAuth(getAnnotationProperty(apiMethod, "useApiLevelAuth"));
     config.setSecurityRequirements(getAnnotationProperty(apiMethod, "securityRequirements"));
   }
 

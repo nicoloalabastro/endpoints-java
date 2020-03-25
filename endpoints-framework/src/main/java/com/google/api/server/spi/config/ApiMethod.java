@@ -46,6 +46,8 @@ public @interface ApiMethod {
 
   Authorization[] securityRequirements() default {};
 
+  boolean useApiLevelAuth() default true;
+
   /**
    * The name for this method in the .api file. This will automatically be
    * prefixed with {@code "<apiname>."} to create a unique name for the method.

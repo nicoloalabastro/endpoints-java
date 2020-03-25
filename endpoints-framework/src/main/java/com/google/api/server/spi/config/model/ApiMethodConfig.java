@@ -187,7 +187,17 @@ public class ApiMethodConfig {
 
   private List<SecurityRequirement> securityRequirements;
 
-  public List<SecurityRequirement> getSecurityRequirements() {
+  private boolean useApiLevelAuth = true;
+
+    public boolean isUseApiLevelAuth() {
+        return useApiLevelAuth;
+    }
+
+    public void setUseApiLevelAuth(boolean useApiLevelAuth) {
+        this.useApiLevelAuth = useApiLevelAuth;
+    }
+
+    public List<SecurityRequirement> getSecurityRequirements() {
     return securityRequirements;
   }
 

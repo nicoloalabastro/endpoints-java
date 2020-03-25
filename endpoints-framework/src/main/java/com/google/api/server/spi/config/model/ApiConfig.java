@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import io.swagger.models.SecurityRequirement;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 
 import java.util.*;
@@ -84,6 +85,16 @@ public class ApiConfig {
   private List<ApiLimitMetricConfig> apiLimitMetrics;
 
   private Map<String, SecuritySchemeDefinition> securityDefinitions;
+
+    private List<SecurityRequirement> securityRequirements;
+
+    public List<SecurityRequirement> getSecurityRequirements() {
+        return securityRequirements;
+    }
+
+    public void setSecurityRequirements(List<SecurityRequirement> securityRequirements) {
+        this.securityRequirements = securityRequirements;
+    }
 
   /**
    * Simple factory to create {@link ApiConfig} instances.
